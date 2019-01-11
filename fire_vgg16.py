@@ -1,44 +1,90 @@
 import sys
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+
 from keras import models
 from keras import layers
-from keras.preprocessing.image import ImageDataGenerator
 from keras.applications import VGG16
+from keras.preprocessing.image import ImageDataGenerator
+
+def extract_features(directory, sample_count):
+    features = np.zeros(shape=(sample_count, 4, 4, 512))
+    labels = np.zeros(shape=(sample_count))
+    generator = datagen.flow_from_directory(
+        directory,
+        target_size=(150, 150),
+        batch_size=batch_size,
+        class_mode='binary')
+    i = 0
+    for inputs_batch, labels_batch in generator:
+        features_batch = conv_base.predict(inputs_batch)
+        features[i * batch_size : (i + 1) * batch_size] = features_batch
+        labels[i * batch_size : (i + 1) * batch_size] = labels_batch
+        i += 1
+        if i * batch_size >= sample_count:
+            # Note that since generators yield data indefinitely in a loop,
+            # we must `break` after every image has been seen once.
+            break
+    return features, labels
+
+def display_result(history):
+    acc = history.history['acc']
+    val_acc = history.history['val_acc']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+
+    epochs = range(len(acc))
+
+    plt.plot(epochs, acc, 'bo', label='Training acc')
+    plt.plot(epochs, val_acc, 'b', label='Validation acc')
+    plt.title('Training and validation accuracy')
+    plt.legend()
+
+    plt.figure()
+
+    plt.plot(epochs, loss, 'bo', label='Training loss')
+    plt.plot(epochs, val_loss, 'b', label='Validation loss')
+    plt.title('Training and validation loss')
+    plt.legend()
+
+    plt.show()  
+
+def print_help():
+    pass
 
 def main():
 # TODO-JYW: Add named command line options: https://stackabuse.com/command-line-arguments-in-python/    
 #    if len(sys.argv) < 2:
 #        print_help()
-    
-    train_dir = 'd:/development/fire_data'
 
-    conv_base = VGG16(weights='imagenet', include_top=False)
+# TODO-JYW: LEFT-OFF: Test this code.
+    
+    base_dir = 'D:\\development\\screenshots'
+
+    train_dir = os.path.join(base_dir, 'train')
+    validation_dir = os.path.join(base_dir, 'validation')
+    test_dir = os.path.join(base_dir, 'test')
+
+    datagen = ImageDataGenerator(rescale=1./255)
+
+    train_features, train_labels = extract_features(train_dir, 2000)
+    validation_features, validation_labels = extract_features(validation_dir, 1000)
+    test_features, test_labels = extract_features(test_dir, 1000)
 
     model = models.Sequential()
-    model.add(conv_base)
-    model.add(layers.Flatten())
-    model.add(layers.Dense(256, activation='relu'))
+    model.add(layers.Dense(256, activation='relu', input_dim=4 * 4 * 512))
+    model.add(layers.Dropout(0.5))
     model.add(layers.Dense(1, activation='sigmoid'))
 
-    # Freeze the VGG16 base to prevent updating the pretrained weight values.
-    conv_base.trainable = False
+    model.compile(optimizer=optimizers.RMSprop(lr=2e-5),
+              loss='binary_crossentropy',
+              metrics=['acc'])
 
-    # TODO-JYW-LEFT-OFF: Examine each of the options for the ImageDataGenerator class.
-    train_datagen = ImageDataGenerator(
-        rescale=1./255,
-        rotation_range=40,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        shear_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True,
-        fill_mode='nearest')
+    history = model.fit(train_features, train_labels,
+                        epochs=30,
+                        batch_size=20,
+                        validation_data=(validation_features, validation_labels))
 
-    # Note that the validation data should not be augmented!
-    test_datagen = ImageDataGenerator(rescale=1./255)    
-
-
-def print_help():
-    pass
-  
 if __name__== "__main__":
   main()
