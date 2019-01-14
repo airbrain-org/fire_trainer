@@ -93,7 +93,7 @@ def main():
     # Flatten the feature vectors to be used in the dense network which follows.
     train_features = np.reshape(train_features, (2000, 4 * 4 * 512))
     validation_features = np.reshape(validation_features, (1000, 4 * 4 * 512))
-    test_features = np.reshape(test_features, (50, 4 * 4 * 512))
+    test_features = np.reshape(test_features, (10, 4 * 4 * 512))
 
     # Generate the dense network that will be used to classify the feature vectors 
     # generated above.
