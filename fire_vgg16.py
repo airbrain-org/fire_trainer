@@ -9,13 +9,16 @@ from keras import optimizers
 from keras.applications import VGG16
 from keras.preprocessing.image import ImageDataGenerator
 
+# Import the TensorFlow backend to limit the number of threads used by Keras.
+# from keras import backend as K
+
 def extract_features(network, directory, sample_count):
     features = np.zeros(shape=(sample_count, 4, 4, 512))
     labels = np.zeros(shape=(sample_count))
-    datagen = ImageDataGenerator(rescale=1./255)
-    batch_size = 20
+    batch_size = 10
 
     # Create the generator that will process a number of images (batch_size)
+    datagen = ImageDataGenerator(rescale=1./255)    
     generator = datagen.flow_from_directory(
         directory,
         target_size=(150, 150),
@@ -29,11 +32,13 @@ def extract_features(network, directory, sample_count):
         # Save the generated features and labels into numpy array for return to the caller.
         features[i * batch_size : (i + 1) * batch_size] = features_batch
         labels[i * batch_size : (i + 1) * batch_size] = labels_batch
-        i += 1
         # Do not allow the total number of processed images to exceed the total number of
         # samples.        
+        i += 1
         if i * batch_size >= sample_count:
             break
+        else:
+            print(f"Feature count:{i * batch_size}, directory:{directory}")
     return features, labels
 
 def display_result(training_history):
@@ -65,10 +70,12 @@ def main():
 # TODO-JYW: Add named command line options: https://stackabuse.com/command-line-arguments-in-python/    
 #    if len(sys.argv) < 2:
 #        print_help()
+    
+    # Configure Keras to use a maximum of 32 threads.
+    #K.set_session(K.tf.Session(config=K.tf.ConfigProto(intra_op_‌​parallelism_threads=‌32, inter_op_parallelism_threads=32)))
 
+    # Form the location of the training data relative the base_dir specificed by the caller.
     base_dir = 'D:\\development\\screenshots'
-
-    # Form the location of the traning data relative the base_dir specificed by the caller.
     train_dir = os.path.join(base_dir, 'train')
     validation_dir = os.path.join(base_dir, 'validation')
     test_dir = os.path.join(base_dir, 'test')
@@ -81,7 +88,12 @@ def main():
     # Generate feature vectors for each of the images using the pretrained network.
     train_features, train_labels = extract_features(network, train_dir, 2000)
     validation_features, validation_labels = extract_features(network, validation_dir, 1000)
-    test_features, test_labels = extract_features(network, test_dir, 1000)
+    test_features, test_labels = extract_features(network, test_dir, 10)
+
+    # Flatten the feature vectors to be used in the dense network which follows.
+    train_features = np.reshape(train_features, (2000, 4 * 4 * 512))
+    validation_features = np.reshape(validation_features, (1000, 4 * 4 * 512))
+    test_features = np.reshape(test_features, (50, 4 * 4 * 512))
 
     # Generate the dense network that will be used to classify the feature vectors 
     # generated above.
@@ -96,10 +108,14 @@ def main():
     # Train the network using the feature vectors extracted from each training, validation, and
     # test image.
     history = model.fit(train_features, train_labels,
-                        epochs=30,
+                        epochs=50,
                         batch_size=20,
                         validation_data=(validation_features, validation_labels))
     display_result(history)
+
+    # Display results generated from the test data.
+    mse, mae = model.evaluate(test_features, test_labels)
+    print("Test data accuracy: #", mae)
 
 if __name__== "__main__":
   main()
