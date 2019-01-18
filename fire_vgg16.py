@@ -66,6 +66,36 @@ def display_result(training_history):
 def print_help():
     pass
 
+def display_image_predictions(network, directory):
+    # Create the generator that will process a number of images (batch_size)
+    datagen = ImageDataGenerator(rescale=1./255)    
+    generator = datagen.flow_from_directory(
+        directory,
+        target_size=(150, 150),
+        batch_size=batch_size,
+        class_mode='binary')
+    generator.reset()
+
+    # Run the network on the specified directory, and remember both the prediction
+    # value and the associated prediction class.
+    predictions = network.predict_generator(generator, verbose=1)
+    predicted_class = np.argmax(predictions, axis=1)
+
+    # Retrieve a list of all known class indexes.
+    labels = (generator.class_indices)
+
+    # Exchange the numeric indexs with textual lables in a dictionary.
+    labels = dict((v,k) for k,v in labels.items())
+
+    # Now transform the indexes of each prediction into the asscoicated 
+    # class name and collect into the "predictions" array
+    predictions = [labels[k] for k in predicted_class_indices]
+
+    # Obtain the files names of each generated image and display the image
+    # along with the name of the associated classification.
+    filenames = generator.filenames
+
+
 def main():
 # TODO-JYW: Add named command line options: https://stackabuse.com/command-line-arguments-in-python/    
 #    if len(sys.argv) < 2:
@@ -108,7 +138,7 @@ def main():
     # Train the network using the feature vectors extracted from each training, validation, and
     # test image.
     history = model.fit(train_features, train_labels,
-                        epochs=50,
+                        epochs=75,
                         batch_size=20,
                         validation_data=(validation_features, validation_labels))
     display_result(history)
@@ -116,6 +146,14 @@ def main():
     # Display results generated from the test data.
     mse, mae = model.evaluate(test_features, test_labels)
     print("Test data accuracy: #", mae)
+
+//    test_classes = model.predict_classes(test_features)
+//    for i in range(len(test_classes)):
+//        print("test #{}, class #{}, label #{}", i, test_classes[i], test_labels[i])
+
+    display_image_predictions()
+
+    # TODO-JYW: Use pinned tab to extract file names from the data generator.
 
 if __name__== "__main__":
   main()
