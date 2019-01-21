@@ -19,7 +19,7 @@ If the prediction was correct the second character will match, as in: "ps ls" an
 
 The other characters appearing after these contain the last few characters of the file name. 
 
-**The images appearing below represent an overall test accuracy of: 0.875**
+**The images appearing below represent an overall test accuracy of: 0.90**
 
 ![Page 1](test_results_figure_1.jpg)
 ![Page 2](test_results_figure_2.jpg)
