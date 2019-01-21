@@ -125,15 +125,10 @@ def print_help():
     pass
 
 def display_image_predictions(predictions, label_names, file_names):
-#    w = 10
-#    h = 10
     columns = 4
     rows = 4
     pages = 4
 
-    # prep (x,y) for extra plotting
- #   xs = np.linspace(0, 2 * np.pi, 60)  # from 0 to 2pi
-#    ys = np.abs(np.sin(xs))           # absolute of sine
     is_more_images = len(file_names) > 0
 
     for page_num in range(pages):
@@ -145,12 +140,10 @@ def display_image_predictions(predictions, label_names, file_names):
         for i in range(columns * rows):
             image_index = page_num * columns * rows + i
             img = image.load_img(file_names[image_index], target_size=(150, 150))
-    #        img = np.random.randint(10, size=(h,w))
             # create subplot and append to ax
             subplot = fig.add_subplot(rows, columns, i + 1)
             subplot.set_title("p" + predictions[image_index][0] + " l" + label_names[image_index][0] + " f" + file_names[image_index][-10:])  # set title
             subplot.imshow(img)       
-    #        plt.imshow(img)
 
             # Stop displaying subplots if there are no additional images.
             if (image_index + 1 >= len(file_names)):
@@ -161,28 +154,7 @@ def display_image_predictions(predictions, label_names, file_names):
         print("Saving test results figure #{}, file name {}".format(page_num + 1, results_file_name))
         plt.savefig(results_file_name, format="jpg")
 
-    # Display the images and their respective file names.
-    # i = 0
-    # for file_name in file_names:
-    #     # Read the image and resize it
-    #     img = image.load_img(file_name, target_size=(150, 150))
-
-    #     # Display the array as an image.       
-    #     plt.figure(i)
-    #     plt.imshow(img)
-    #     plt.title("P:" + predictions[i] + ", L:" + label_names[i] + ", F:" + file_names[i])
-    #     i += 1
-
-    # plt.show()    
-
 def main():
-# TODO-JYW: Add named command line options: https://stackabuse.com/command-line-arguments-in-python/    
-#    if len(sys.argv) < 2:
-#        print_help()
-    
-    # Configure Keras to use a maximum of 32 threads.
-    #K.set_session(K.tf.Session(config=K.tf.ConfigProto(intra_op_‌​parallelism_threads=‌32, inter_op_parallelism_threads=32)))
-
     # Form the location of the training data relative the base_dir specificed by the caller.
     base_dir = 'D:\\development\\screenshots'
     train_dir = os.path.join(base_dir, 'train')
@@ -232,12 +204,6 @@ def main():
 
     # Now display the predictions and the associated images in the test data.
     display_image_predictions(predicted_label_names, actual_label_names, file_names)
-
-#    test_classes = model.predict_classes(test_features)
-#    for i in range(len(test_classes)):
-#        print("test #{}, class #{}, label #{}", i, test_classes[i], test_labels[i])
-
-    # TODO-JYW: Use pinned tab to extract file names from the data generator.
 
 if __name__== "__main__":
   main()
