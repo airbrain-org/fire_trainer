@@ -33,10 +33,9 @@ from keras.applications import VGG16
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
 
+detection_threshold = .60
+
 def test_network(base_network, class_network, directory, sample_count):
-    predicted_label_names = []
-    actual_label_names = []
-    file_names = []
     batch_size = 10
 
     datagen = ImageDataGenerator(rescale=1./255)    
@@ -48,7 +47,7 @@ def test_network(base_network, class_network, directory, sample_count):
         class_mode='binary')    
     # Retrieve a list of all known class indexes.
     known_label_indices = (generator.class_indices)
-    # Exchange the numeric indexs with textual lables in a dictionary.
+    # Exchange the numeric indexes with textual lables in a dictionary.
     known_label_names = dict((v,k) for k,v in known_label_indices.items())        
     # Obtain the files names of each generated image and display the image
     # along with the name of the associated classification.
@@ -57,6 +56,9 @@ def test_network(base_network, class_network, directory, sample_count):
     file_names = [os.path.join(directory, file_name) for file_name in file_names]
 
     # Process each batch of images provided by the generator through the specified network.
+    predicted_label_names = []
+    predicted_label_percent = []
+    actual_label_names = []
     i = 0
     for inputs_batch, labels_batch in generator:
         # Now transform the lables for all of the images into lable names.
@@ -70,14 +72,17 @@ def test_network(base_network, class_network, directory, sample_count):
         # as input to the densely connected class network.
         features_batch = np.reshape(features_batch, (batch_size, 4 * 4 * 512))
 
-        # Save the generated features, labels, label names, and file names.        
+        # Save the generated features: label percents, label names, actual label names, and file names. 
+        # Use the specified threshold to select the predicted class.
         predicted_labels_batch = class_network.predict(features_batch)
-        predicted_labels_int = np.rint(predicted_labels_batch)
+        predicted_label_percent[i * batch_size : (i + 1) * batch_size] = predicted_labels_batch        
+        predicted_labels_int = [1 if label_percent >= detection_threshold else 0 for label_percent in predicted_labels_batch]
+
         label_names = []
         for label_index in range(len(predicted_labels_int)):
-            label_name_index = predicted_labels_int[label_index].item()
+            label_name_index = predicted_labels_int[label_index]
             label_names.append(known_label_names[label_name_index])
-        
+        # Accumulate each batch of prediction names to return values to the caller.        
         predicted_label_names[i * batch_size : (i + 1) * batch_size] = label_names        
 
         # Do not allow the total number of processed images to exceed the total number of
@@ -88,7 +93,7 @@ def test_network(base_network, class_network, directory, sample_count):
         else:
             print(f"Test data count:{i * batch_size}, directory:{directory}")
 
-    return predicted_label_names, actual_label_names, file_names        
+    return predicted_label_names, predicted_label_percent, actual_label_names, file_names        
 
 def extract_features(network, directory, sample_count):
     features = np.zeros(shape=(sample_count, 4, 4, 512))
@@ -147,7 +152,7 @@ def display_training_result(training_history):
 def print_help():
     pass
 
-def display_image_predictions(predictions, label_names, file_names):
+def display_image_predictions(predictions, membership, label_names, file_names):
     columns = 4
     rows = 4
     pages = 4
@@ -163,9 +168,10 @@ def display_image_predictions(predictions, label_names, file_names):
         for i in range(columns * rows):
             image_index = page_num * columns * rows + i
             img = image.load_img(file_names[image_index], target_size=(150, 150))
-            # create subplot and append to ax
+            # create subplot and append to axis
             subplot = fig.add_subplot(rows, columns, i + 1)
-            subplot.set_title("p" + predictions[image_index][0] + " l" + label_names[image_index][0] + " f" + file_names[image_index][-10:])  # set title
+            subplot.set_title("p" + predictions[image_index][0] + " l" + label_names[image_index][0] + " m" + str(membership[image_index][0])[0:4])  # set title
+                # + " f" + file_names[image_index][-10:]            
             subplot.imshow(img)       
 
             # Stop displaying subplots if there are no additional images.
@@ -223,10 +229,10 @@ def main():
 
     # Apply the pretrained base network and the densely connected classifier to
     # the images in the test directory.
-    predicted_label_names, actual_label_names, file_names = test_network(network, model, test_dir, 40)
+    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(network, model, test_dir, 40)
 
     # Now display the predictions and the associated images in the test data.
-    display_image_predictions(predicted_label_names, actual_label_names, file_names)
+    display_image_predictions(predicted_label_names, predicted_label_percent, actual_label_names, file_names)
 
 if __name__== "__main__":
   main()
