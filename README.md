@@ -30,7 +30,7 @@ The other characters appearing after these contain the last few characters of th
 - Development of the training source code was performed on a Windows PC with VSCode,
 used for execution and setting break points.
 
-# Left off:
+# TODO:
 - Add the code needed to save the training weights for the lowest validation loss. 
   Consult Keras book for sample code.
 - Time for false positive testing on actual aerial stills?
