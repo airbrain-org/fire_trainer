@@ -27,3 +27,5 @@ The other characters appearing after these contain the last few characters of th
 
 # Notes
 - The number of training and validation files must be evenly divisible by 10.
+- Development of the training source code was performed on a Windows PC with VSCode,
+used for execution and setting break points.
