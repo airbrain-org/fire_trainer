@@ -218,7 +218,7 @@ def main():
     # Train the network using the feature vectors extracted from each training, validation, and
     # test image.
     history = model.fit(train_features, train_labels,
-                        epochs=75,
+                        epochs=150,
                         batch_size=20,
                         validation_data=(validation_features, validation_labels))
     display_training_result(history)

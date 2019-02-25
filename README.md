@@ -25,3 +25,5 @@ The other characters appearing after these contain the last few characters of th
 ![Page 2](test_results_figure_2.jpg)
 ![Page 3](test_results_figure_3.jpg)
 
+# Notes
+- The number of training and validation files must be evenly divisible by 10.
