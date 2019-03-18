@@ -31,6 +31,13 @@ The other characters appearing after these contain the last few characters of th
 used for execution and setting break points.
 
 # TODO:
+- Evaluate the performance of the test data after each epoch, and make this the primary
+  criteria for identifying the best training parameters.
+- Remove the hard coded constants used to define the dimensions of the training data and
+  replace with named constants (no magic numbers).
+- Cache the calculate features for unchanged images.
 - Add the code needed to save the training weights for the lowest validation loss. 
   Consult Keras book for sample code.
+DONE: Automatically create training and validation directories from generated images.
+- Conduct training from scratch (i.e. do not use transfer learning).
 - Time for false positive testing on actual aerial stills?

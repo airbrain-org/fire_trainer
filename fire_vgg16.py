@@ -25,6 +25,7 @@ import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import callbacks
 
 from keras import models
 from keras import layers
@@ -33,7 +34,18 @@ from keras.applications import VGG16
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
 
-detection_threshold = .60
+# Training parameters:
+detection_threshold = .90
+num_training_images = 500
+num_validation_images = 50
+num_test_images = 40
+model_fit_batch_size = 100
+num_epochs = 80
+x_image_pixels = 150
+y_image_pixels = 150
+# 150 x 150 = 4 * 4 * 512
+# 512 x 512 = 16 * 16 * 512
+length_of_flattened_data = 4 * 4 * 512
 
 def test_network(base_network, class_network, directory, sample_count):
     batch_size = 10
@@ -41,7 +53,7 @@ def test_network(base_network, class_network, directory, sample_count):
     datagen = ImageDataGenerator(rescale=1./255)    
     generator = datagen.flow_from_directory(
         directory,
-        target_size=(150, 150),
+        target_size=(x_image_pixels, y_image_pixels),
         batch_size=batch_size,
         shuffle=False,
         class_mode='binary')    
@@ -70,7 +82,7 @@ def test_network(base_network, class_network, directory, sample_count):
         features_batch = base_network.predict(inputs_batch)
         # Flatten the data produced above by the base_network so that it may serve
         # as input to the densely connected class network.
-        features_batch = np.reshape(features_batch, (batch_size, 4 * 4 * 512))
+        features_batch = np.reshape(features_batch, (batch_size, length_of_flattened_data))
 
         # Save the generated features: label percents, label names, actual label names, and file names. 
         # Use the specified threshold to select the predicted class.
@@ -96,6 +108,7 @@ def test_network(base_network, class_network, directory, sample_count):
     return predicted_label_names, predicted_label_percent, actual_label_names, file_names        
 
 def extract_features(network, directory, sample_count):
+    # TODO-JYW: Represent the following shape in the training parameters section
     features = np.zeros(shape=(sample_count, 4, 4, 512))
     labels = np.zeros(shape=(sample_count))
     batch_size = 10
@@ -104,7 +117,7 @@ def extract_features(network, directory, sample_count):
     datagen = ImageDataGenerator(rescale=1./255)    
     generator = datagen.flow_from_directory(
         directory,
-        target_size=(150, 150),
+        target_size=(x_image_pixels, y_image_pixels),
         batch_size=batch_size,
         class_mode='binary')
 
@@ -158,6 +171,7 @@ def display_image_predictions(predictions, membership, label_names, file_names):
     pages = 4
 
     is_more_images = len(file_names) > 0
+    error_count = 0
 
     for page_num in range(pages):
         if (not is_more_images):
@@ -173,15 +187,29 @@ def display_image_predictions(predictions, membership, label_names, file_names):
             subplot.set_title("p" + predictions[image_index][0] + " l" + label_names[image_index][0] + " m" + str(membership[image_index][0])[0:4])  # set title
                 # + " f" + file_names[image_index][-10:]            
             subplot.imshow(img)       
-
+            # Keep track of the predictions which don't match the actual label names.
+            if (predictions[image_index][0] != label_names[image_index][0]):
+                error_count += 1
             # Stop displaying subplots if there are no additional images.
             if (image_index + 1 >= len(file_names)):
                 is_more_images = False
                 break
 
         results_file_name = "test_results_figure_{}.jpg".format(page_num + 1)
-        print("Saving test results figure #{}, file name {}".format(page_num + 1, results_file_name))
+        print(f"Saving test results figure #{page_num + 1}, file name {results_file_name}")
         plt.savefig(results_file_name, format="jpg")
+
+    print(f"Error percent: {error_count / len(file_names)}")    
+
+def move_files(source, destintation, num_files):
+    num_images = 0
+    source_files = os.listdir(source)
+
+    for file in source_files:
+        os.rename(source + '/' + file, destintation + '/' + file)
+        num_images += 1
+        if (num_images >= num_files):
+            break
 
 def main():
     # Form the location of the training data relative the base_dir specificed by the caller.
@@ -190,25 +218,38 @@ def main():
     validation_dir = os.path.join(base_dir, 'validation')
     test_dir = os.path.join(base_dir, 'test')
 
+    # Make a validation directory, in case it is missing.
+    if (not os.path.isdir(validation_dir)):
+        os.mkdir(validation_dir)
+        os.mkdir(validation_dir + '/nothing')
+        os.mkdir(validation_dir + '/smoke')
+
+    # Move some of the training data to the validation directory, if the validation directory
+    # is empty.
+    if (os.listdir(validation_dir + '/smoke') == []):
+        move_files(train_dir + '/smoke', validation_dir + '/smoke', num_validation_images)
+        move_files(train_dir + '/nothing', validation_dir + '/nothing', num_validation_images)
+        print("Moved {num_validation_images} images to {validation_dir}")
+
     # Load the pretrained network, except the top (last) layer used for classification.
     network = VGG16(weights='imagenet',
             include_top=False,
-            input_shape=(150, 150, 3))
+            input_shape=(x_image_pixels, y_image_pixels, 3))
 
     # Generate feature vectors for each of the images using the pretrained network.
-    train_features, train_labels = extract_features(network, train_dir, 2000)
-    validation_features, validation_labels = extract_features(network, validation_dir, 1000)
-    test_features, test_labels = extract_features(network, test_dir, 40)
+    train_features, train_labels = extract_features(network, train_dir, num_training_images)
+    validation_features, validation_labels = extract_features(network, validation_dir, num_validation_images)
+    test_features, test_labels = extract_features(network, test_dir, num_test_images)
 
     # Flatten the feature vectors to be used in the dense network which follows.
-    train_features = np.reshape(train_features, (2000, 4 * 4 * 512))
-    validation_features = np.reshape(validation_features, (1000, 4 * 4 * 512))
-    test_features = np.reshape(test_features, (40, 4 * 4 * 512))
+    train_features = np.reshape(train_features, (num_training_images, length_of_flattened_data))
+    validation_features = np.reshape(validation_features, (num_validation_images, length_of_flattened_data))
+    test_features = np.reshape(test_features, (num_test_images, length_of_flattened_data))
 
     # Generate the dense network that will be used to classify the feature vectors 
     # generated above.
     model = models.Sequential()
-    model.add(layers.Dense(256, activation='relu', input_dim = 4 * 4 * 512))
+    model.add(layers.Dense(256, activation='relu', input_dim = length_of_flattened_data))
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(1, activation='sigmoid'))
     model.compile(optimizer=optimizers.RMSprop(lr=2e-5),
@@ -218,14 +259,17 @@ def main():
     # Train the network using the feature vectors extracted from each training, validation, and
     # test image.
     history = model.fit(train_features, train_labels,
-                        epochs=150,
-                        batch_size=20,
-                        validation_data=(validation_features, validation_labels))
+                        epochs=num_epochs,
+                        batch_size=model_fit_batch_size,
+                        validation_data=(validation_features, validation_labels),
+    # Setup of the callback executed at the end of every epoch, to check the performance on the test data.                        
+                        callbacks=[callbacks.create_test_data_checkpoint_callback(model, test_features, test_labels)])
     display_training_result(history)
 
+# TODO-JYW: TESTING-TESTING
     # Display results generated from the test data.
-    mse, mae = model.evaluate(test_features, test_labels)
-    print("Test data accuracy: #", mae)
+#    mse, mae = model.evaluate(test_features, test_labels)
+#    print("Test data accuracy: #", mae)
 
     # Apply the pretrained base network and the densely connected classifier to
     # the images in the test directory.
