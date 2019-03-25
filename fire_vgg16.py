@@ -47,6 +47,13 @@ y_image_pixels = 150
 # 512 x 512 = 16 * 16 * 512
 length_of_flattened_data = 4 * 4 * 512
 
+# TODO-JYW: Add the CLI options referenced below
+# Default training parameters, overriden with CLI options:
+save_model_file_path = "fire_detection.h5"
+tensorboard_log_directory = "tensorboard"
+early_stopping_improvement_epochs = 10
+base_training_directory = 'D:\\development\\screenshots'
+
 def test_network(base_network, class_network, directory, sample_count):
     batch_size = 10
 
@@ -172,6 +179,7 @@ def display_image_predictions(predictions, membership, label_names, file_names):
 
     is_more_images = len(file_names) > 0
     error_count = 0
+    return_image_files = []
 
     for page_num in range(pages):
         if (not is_more_images):
@@ -199,7 +207,11 @@ def display_image_predictions(predictions, membership, label_names, file_names):
         print(f"Saving test results figure #{page_num + 1}, file name {results_file_name}")
         plt.savefig(results_file_name, format="jpg")
 
+        # Save the pyplot image filenames.
+        return_image_files.append(results_file_name)
+
     print(f"Error percent: {error_count / len(file_names)}")    
+    return return_image_files
 
 def move_files(source, destintation, num_files):
     num_images = 0
@@ -213,7 +225,7 @@ def move_files(source, destintation, num_files):
 
 def main():
     # Form the location of the training data relative the base_dir specificed by the caller.
-    base_dir = 'D:\\development\\screenshots'
+    base_dir = base_training_directory
     train_dir = os.path.join(base_dir, 'train')
     validation_dir = os.path.join(base_dir, 'validation')
     test_dir = os.path.join(base_dir, 'test')
@@ -263,7 +275,10 @@ def main():
                         batch_size=model_fit_batch_size,
                         validation_data=(validation_features, validation_labels),
     # Setup of the callback executed at the end of every epoch, to check the performance on the test data.                        
-                        callbacks=[callbacks.create_test_data_checkpoint_callback(model, test_features, test_labels)])
+                        callbacks=[callbacks.create_test_data_checkpoint(model, test_features, test_labels),
+                                   callbacks.create_early_stopping(early_stopping_improvement_epochs),
+                                   callbacks.create_model_checkpoint(save_model_file_path),
+                                   callbacks.create_tensorboard(tensorboard_log_directory)])
     display_training_result(history)
 
 # TODO-JYW: TESTING-TESTING

@@ -21,6 +21,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import keras
 from keras import models
 from keras.callbacks import LambdaCallback
 
@@ -28,10 +29,38 @@ def do_test_data_checkpoint(model, test_features, test_labels):
     mse, mae = model.evaluate(test_features, test_labels)
     print("Test data accuracy: #", mae)
 
-def create_test_data_checkpoint_callback(model, test_features, test_labels):
+def create_test_data_checkpoint(model, test_features, test_labels):
     test_data_checkpoint = LambdaCallback(
         on_epoch_end=lambda epoch, logs: do_test_data_checkpoint(model, test_features, test_labels))
 
     return test_data_checkpoint
+
+def create_early_stopping(patience):
+    return keras.callbacks.EarlyStopping(
+        monitor='acc',
+        patience=patience
+    )
+
+def create_model_checkpoint(filepath):
+    return keras.callbacks.ModelCheckpoint(
+        filepath=filepath,
+        monitor='val_loss',
+        save_best_only=True
+    )
+
+def create_reduce_lr(factor, patience):
+    return keras.callbacks.ReduceLROnPlateau(
+        monitor="val_loss",
+        factor=factor,
+        patience=patience
+    )
+
+def create_tensorboard(log_dir):
+    return keras.callbacks.TensorBoard(
+        log_dir=log_dir,
+        histogram_freq=1,
+        write_images=True
+    )
+
 
 
