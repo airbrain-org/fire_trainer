@@ -30,6 +30,7 @@ import callbacks
 from keras import models
 from keras import layers
 from keras import optimizers
+from keras.models import Model
 from keras.applications import VGG16
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
@@ -54,7 +55,16 @@ tensorboard_log_directory = "tensorboard"
 early_stopping_improvement_epochs = 10
 base_training_directory = 'D:\\development\\screenshots'
 
-def test_network(base_network, class_network, directory, sample_count):
+def add_network(base_network, class_network):
+    joined_network = Model(inputs=base_network.input, outputs=class_network.input)
+    
+    # Set all layers as non-trainable.
+    for layer in joined_network.layers:
+        layer.trainable = False
+
+    return joined_network    
+
+def test_network(network, directory, sample_count):
     batch_size = 10
 
     datagen = ImageDataGenerator(rescale=1./255)    
@@ -86,14 +96,18 @@ def test_network(base_network, class_network, directory, sample_count):
 
         # Feed this batch of images to the base network to extract features using the pretrained
         # weights and biases.
-        features_batch = base_network.predict(inputs_batch)
+#        features_batch = base_network.predict(inputs_batch)
         # Flatten the data produced above by the base_network so that it may serve
         # as input to the densely connected class network.
-        features_batch = np.reshape(features_batch, (batch_size, length_of_flattened_data))
+#        features_batch = np.reshape(features_batch, (batch_size, length_of_flattened_data))
 
         # Save the generated features: label percents, label names, actual label names, and file names. 
         # Use the specified threshold to select the predicted class.
-        predicted_labels_batch = class_network.predict(features_batch)
+#        predicted_labels_batch = class_network.predict(features_batch)
+#        predicted_label_percent[i * batch_size : (i + 1) * batch_size] = predicted_labels_batch        
+#        predicted_labels_int = [1 if label_percent >= detection_threshold else 0 for label_percent in predicted_labels_batch]
+
+        predicted_labels_batch = network.predict(inputs_batch)
         predicted_label_percent[i * batch_size : (i + 1) * batch_size] = predicted_labels_batch        
         predicted_labels_int = [1 if label_percent >= detection_threshold else 0 for label_percent in predicted_labels_batch]
 
@@ -281,6 +295,12 @@ def main():
                                    callbacks.create_tensorboard(tensorboard_log_directory)])
     display_training_result(history)
 
+    # Add the model trained above to the base network so that it can be saved as a single network.
+    joined_network = add_network(network, model)
+    joined_network.compile(optimizer=optimizers.RMSprop(lr=2e-5),
+              loss='binary_crossentropy',
+              metrics=['acc'])
+
 # TODO-JYW: TESTING-TESTING
     # Display results generated from the test data.
 #    mse, mae = model.evaluate(test_features, test_labels)
@@ -288,7 +308,12 @@ def main():
 
     # Apply the pretrained base network and the densely connected classifier to
     # the images in the test directory.
-    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(network, model, test_dir, 40)
+#    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(network, model, test_dir, 40)
+    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(network, test_dir, 40)
+
+    # TODO-JYW: Create a join_network function.
+    # TODO-JYW: LEFT-OFF: Modify test_network to use a single network.  
+    # TODO-JYW: Modify the code to save the network after it is joined with join_network.
 
     # Now display the predictions and the associated images in the test data.
     display_image_predictions(predicted_label_names, predicted_label_percent, actual_label_names, file_names)
