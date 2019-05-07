@@ -55,14 +55,24 @@ tensorboard_log_directory = "tensorboard"
 early_stopping_improvement_epochs = 10
 base_training_directory = 'D:\\development\\screenshots'
 
-def add_network(base_network, class_network):
-    joined_network = Model(inputs=base_network.input, outputs=class_network.input)
-    
+def add_network(base_network, output_layer_name, class_network, input_layer_name):
+    # Create dictionaries for the base and class networks.
+    base_network_dict = dict([(layer.name, layer) for layer in base_network.layers])
+    class_network_dict = dict([(layer.name, layer) for layer in class_network.layers])
+
+    # Connect the output layer specified to the input layer specified.
+    output_layer = base_network_dict[output_layer_name]
+    input_layer = class_network_dict[input_layer_name]
+    input_layer.input = output_layer.output
+
+    # Generate new model to be returned to the caller.
+    return_model = Model(input=base_network.input, output=class_network.output)
+
     # Set all layers as non-trainable.
-    for layer in joined_network.layers:
+    for layer in base_network.layers:
         layer.trainable = False
 
-    return joined_network    
+    return return_model    
 
 def test_network(network, directory, sample_count):
     batch_size = 10
@@ -277,7 +287,7 @@ def main():
     model = models.Sequential()
     model.add(layers.Dense(256, activation='relu', input_dim = length_of_flattened_data))
     model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(1, activation='sigmoid'))
+    model.add(layers.Dense(1, activation='sigmoid', name='final_ouput_layer'))
     model.compile(optimizer=optimizers.RMSprop(lr=2e-5),
               loss='binary_crossentropy',
               metrics=['acc'])
@@ -296,7 +306,7 @@ def main():
     display_training_result(history)
 
     # Add the model trained above to the base network so that it can be saved as a single network.
-    joined_network = add_network(network, model)
+    joined_network = add_network(network, 'block2_pool', model, 'final_ouput_layer')
     joined_network.compile(optimizer=optimizers.RMSprop(lr=2e-5),
               loss='binary_crossentropy',
               metrics=['acc'])
