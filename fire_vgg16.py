@@ -31,6 +31,8 @@ from keras import models
 from keras import layers
 from keras import optimizers
 from keras.models import Model
+from keras.layers import Dense
+from keras.layers import Dropout
 from keras.applications import VGG16
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
@@ -55,24 +57,64 @@ tensorboard_log_directory = "tensorboard"
 early_stopping_improvement_epochs = 10
 base_training_directory = 'D:\\development\\screenshots'
 
-def add_network(base_network, output_layer_name, class_network, input_layer_name):
+#def create_class_layers():
+#    # Generate the dense network that will be used to classify the feature vectors 
+#    # generated above.
+#    input = Dense(256, activation='relu', input_dim = length_of_flattened_data)
+#    x = Dropout(0.5)(input)
+#    output = Dense(1, activation='sigmoid', name='final_ouput_layer')(x)
+#    return input, output
+
+def create_network(base_network, class_network):
     # Create dictionaries for the base and class networks.
     base_network_dict = dict([(layer.name, layer) for layer in base_network.layers])
-    class_network_dict = dict([(layer.name, layer) for layer in class_network.layers])
+#    class_network_dict = dict([(layer.name, layer) for layer in class_network.layers])
 
-    # Connect the output layer specified to the input layer specified.
-    output_layer = base_network_dict[output_layer_name]
-    input_layer = class_network_dict[input_layer_name]
-    input_layer.input = output_layer.output
+#    # Connect the output layer specified to the input layer specified.
+    base_output_layer = base_network_dict['block2_pool']
 
-    # Generate new model to be returned to the caller.
-    return_model = Model(input=base_network.input, output=class_network.output)
+    x = base_network.output
+#    model = models.Sequential()
+#    layer_index = 0
+    x = layers.Dense(256, activation='relu', input_dim = length_of_flattened_data)(x)
+#    x.set_weights(class_network.layers[layer_index].get_weights())
 
-    # Set all layers as non-trainable.
-    for layer in base_network.layers:
+#    layer_index += 1
+    x = layers.Dropout(0.5)(x)
+#    x.set_weights(class_network.layers[layer_index].get_weights())
+
+#    layer_index += 1
+    x = layers.Dense(1, activation='sigmoid', name='final_ouput_layer')(x)
+#    x.set_weights(class_network.layers[layer_index].get_weights())
+
+    return_model = Model(input=base_network.input, output=x)
+    return_model.compile(optimizer=optimizers.RMSprop(lr=2e-5),
+              loss='binary_crossentropy',
+              metrics=['acc'])
+
+#    input_layer = class_network_dict[input_layer_name]
+#    input_layer.input = output_layer.output
+
+    # Copy the class network and stack it onto the base network.
+ #   class_input_layer, class_output_layer = create_class_layers()
+ #   class_input_layer.input = base_output_layer.output
+
+    # Create the new network with the newly added layers.
+#    return_model = Model(input=base_network.input, output=class_output_layer)
+
+    # Copy the weights of the class network passed in to the newly created class network layers.
+#    layer_source_index = 0
+    layer_index = -3
+    for layer in class_network.layers:
+        return_model_layer = return_model.layers[layer_index]
+        return_model_layer.set_weights(layer.get_weights())
+        layer_index += 1
+
+    # Set all layers as untrainable since the weights have already been generated.    
+    for layer in return_model.layers:
         layer.trainable = False
 
-    return return_model    
+    return return_model
 
 def test_network(network, directory, sample_count):
     batch_size = 10
@@ -284,11 +326,21 @@ def main():
 
     # Generate the dense network that will be used to classify the feature vectors 
     # generated above.
+
+    # TODO-JYW: LEFT-OFF: The flattened data used to generate weights makes the weights tensor
+    # not directly connectable to VGG16 output.
     model = models.Sequential()
     model.add(layers.Dense(256, activation='relu', input_dim = length_of_flattened_data))
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(1, activation='sigmoid', name='final_ouput_layer'))
     model.compile(optimizer=optimizers.RMSprop(lr=2e-5),
+              loss='binary_crossentropy',
+              metrics=['acc'])
+
+    # Add the model trained above to the base network so that it can be saved as a single network.
+    # TESTING-TESTING
+    joined_network = create_network(network, model)
+    joined_network.compile(optimizer=optimizers.RMSprop(lr=2e-5),
               loss='binary_crossentropy',
               metrics=['acc'])
 
@@ -306,7 +358,7 @@ def main():
     display_training_result(history)
 
     # Add the model trained above to the base network so that it can be saved as a single network.
-    joined_network = add_network(network, 'block2_pool', model, 'final_ouput_layer')
+    joined_network = create_network(network, model)
     joined_network.compile(optimizer=optimizers.RMSprop(lr=2e-5),
               loss='binary_crossentropy',
               metrics=['acc'])
