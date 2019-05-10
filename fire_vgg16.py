@@ -327,7 +327,7 @@ def main():
     # Generate the dense network that will be used to classify the feature vectors 
     # generated above.
 
-    # TODO-JYW: LEFT-OFF: The flattened data used to generate weights makes the weights tensor
+    # TODO-JYW: LEFT-OFF: 05-10 The flattened data used to generate weights makes the weights tensor
     # not directly connectable to VGG16 output.
     model = models.Sequential()
     model.add(layers.Dense(256, activation='relu', input_dim = length_of_flattened_data))
