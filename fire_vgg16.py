@@ -74,6 +74,9 @@ def create_network(base_network, class_network):
     base_output_layer = base_network_dict['block2_pool']
 
     x = base_network.output
+
+    x = layers.Flatten()(x)
+
 #    model = models.Sequential()
 #    layer_index = 0
     x = layers.Dense(256, activation='relu', input_dim = length_of_flattened_data)(x)
@@ -339,10 +342,9 @@ def main():
 
     # Add the model trained above to the base network so that it can be saved as a single network.
     # TESTING-TESTING
-    joined_network = create_network(network, model)
-    joined_network.compile(optimizer=optimizers.RMSprop(lr=2e-5),
-              loss='binary_crossentropy',
-              metrics=['acc'])
+#    joined_network = create_network(network, model)
+#    joined_network.compile(optimizer=optimizers.RMSprop(lr=2e-5),
+#              metrics=['acc'])
 
     # Train the network using the feature vectors extracted from each training, validation, and
     # test image.
@@ -371,7 +373,8 @@ def main():
     # Apply the pretrained base network and the densely connected classifier to
     # the images in the test directory.
 #    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(network, model, test_dir, 40)
-    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(network, test_dir, 40)
+#    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(network, test_dir, 40)
+    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(joined_network, test_dir, 40)
 
     # TODO-JYW: Create a join_network function.
     # TODO-JYW: LEFT-OFF: Modify test_network to use a single network.  
