@@ -1,8 +1,6 @@
 import numpy as np
 import tensorflow as tf
 
-// TODO-JYW: LEFT-OFF: Create another function to use freeze_session()
-
 def freeze_session(session, keep_var_names=None, output_names=None, clear_devices=True):
     """
     Freezes the state of a session into a pruned computation graph.
@@ -31,6 +29,10 @@ def freeze_session(session, keep_var_names=None, output_names=None, clear_device
             session, input_graph_def, output_names, freeze_var_names)
         return frozen_graph
 
+def save_to_pb(session, model, file_name):
+    frozen_graph = freeze_session(session, output_names=[out.op.name for out in model.outputs])
+    tf.train.write_graph(frozen_graph, './', file_name + '.pbtxt', as_text=True)
+    tf.train.write_graph(frozen_graph, './', file_name + '.pb', as_text=False)    
 
 X = np.array([[0,0], [0,1], [1,0], [1,1]], 'float32')
 Y = np.array([[0], [1], [1], [0]], 'float32')

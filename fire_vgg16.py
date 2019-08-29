@@ -26,6 +26,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import callbacks
+import freeze
 
 from keras import models
 from keras import layers
@@ -36,6 +37,7 @@ from keras.layers import Dropout
 from keras.applications import VGG16
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
+from keras import backend as K
 
 # Training parameters:
 detection_threshold = .90
@@ -53,7 +55,7 @@ length_of_flattened_data = 4 * 4 * 512
 # TODO-JYW: Add the CLI options referenced below
 # Default training parameters, overriden with CLI options:
 save_class_file_path = "fire_class.h5"
-save_network_file_path = "fire_network.pb"
+save_network_file_path = "fire_network"
 tensorboard_log_directory = "tensorboard"
 early_stopping_improvement_epochs = 10
 base_training_directory = 'D:\\development\\screenshots'
@@ -173,9 +175,6 @@ def test_network(network, directory, sample_count):
             print(f"Test data count:{i * batch_size}, directory:{directory}")
 
     return predicted_label_names, predicted_label_percent, actual_label_names, file_names        
-
-def save_to_pb(network, file_path):
-    pass
 
 def extract_features(network, directory, sample_count):
     # TODO-JYW: Represent the following shape in the training parameters section
@@ -351,8 +350,8 @@ def main():
               metrics=['acc'])
 
     # Save the last network processed by Keras to a protobuf file for later deployment.
-    # TODO-JYW: LEFT-OFF: 05-29
-    save_to_pb(save_network_file_path)
+    # TODO-JYW: Continue testing from here.
+    freeze.save_to_pb(K.get_session(), model, save_network_file_path)
 
 # TODO-JYW: TESTING-TESTING
     # Display results generated from the test data.
