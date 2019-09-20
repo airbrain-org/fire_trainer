@@ -34,28 +34,29 @@ def save_to_pb(session, model, file_name):
     tf.train.write_graph(frozen_graph, './', file_name + '.pbtxt', as_text=True)
     tf.train.write_graph(frozen_graph, './', file_name + '.pb', as_text=False)    
 
-X = np.array([[0,0], [0,1], [1,0], [1,1]], 'float32')
-Y = np.array([[0], [1], [1], [0]], 'float32')
+def test_freeze():
+    X = np.array([[0,0], [0,1], [1,0], [1,1]], 'float32')
+    Y = np.array([[0], [1], [1], [0]], 'float32')
 
-model = tf.keras.models.Sequential()
-model.add(tf.keras.layers.Dense(64, input_dim=2, activation='relu'))
-model.add(tf.keras.layers.Dense(64, activation='relu'))
-model.add(tf.keras.layers.Dense(64, activation='relu'))
-model.add(tf.keras.layers.Dense(64, activation='relu'))
-model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
+    model = tf.keras.models.Sequential()
+    model.add(tf.keras.layers.Dense(64, input_dim=2, activation='relu'))
+    model.add(tf.keras.layers.Dense(64, activation='relu'))
+    model.add(tf.keras.layers.Dense(64, activation='relu'))
+    model.add(tf.keras.layers.Dense(64, activation='relu'))
+    model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
 
-model.compile(loss='mean_squared_error', optimizer='adam', metrics=['binary_accuracy'])
+    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['binary_accuracy'])
 
-model.fit(X, Y, batch_size=1, nb_epoch=100, verbose=0)
+    model.fit(X, Y, batch_size=1, nb_epoch=100, verbose=0)
 
-# inputs:  ['dense_input']
-print('inputs: ', [input.op.name for input in model.inputs])
+    # inputs:  ['dense_input']
+    print('inputs: ', [input.op.name for input in model.inputs])
 
-# outputs:  ['dense_4/Sigmoid']
-print('outputs: ', [output.op.name for output in model.outputs])
+    # outputs:  ['dense_4/Sigmoid']
+    print('outputs: ', [output.op.name for output in model.outputs])
 
-model.save('./xor.h5')
+    model.save('./xor.h5')
 
-frozen_graph = freeze_session(tf.keras.backend.get_session(), output_names=[out.op.name for out in model.outputs])
-tf.train.write_graph(frozen_graph, './', 'xor.pbtxt', as_text=True)
-tf.train.write_graph(frozen_graph, './', 'xor.pb', as_text=False)
+    frozen_graph = freeze_session(tf.keras.backend.get_session(), output_names=[out.op.name for out in model.outputs])
+    tf.train.write_graph(frozen_graph, './', 'xor.pbtxt', as_text=True)
+    tf.train.write_graph(frozen_graph, './', 'xor.pb', as_text=False)
