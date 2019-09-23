@@ -31,7 +31,7 @@ def freeze_session(session, keep_var_names=None, output_names=None, clear_device
 
 def save_to_pb(session, model, file_name):
     frozen_graph = freeze_session(session, output_names=[out.op.name for out in model.outputs])
-    tf.train.write_graph(frozen_graph, './', file_name + '.pbtxt', as_text=True)
+#    tf.train.write_graph(frozen_graph, './', file_name + '.pbtxt', as_text=True)
     tf.train.write_graph(frozen_graph, './', file_name + '.pb', as_text=False)    
 
 def test_freeze():

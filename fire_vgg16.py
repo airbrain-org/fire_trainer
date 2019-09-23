@@ -46,11 +46,13 @@ num_validation_images = 50
 num_test_images = 40
 model_fit_batch_size = 100
 num_epochs = 80
-x_image_pixels = 150
-y_image_pixels = 150
+x_image_pixels = 160
+y_image_pixels = 160
+# Note: Must also change the size of the features vector in extract_features()
 # 150 x 150 = 4 * 4 * 512
+# 160 x 160 = 5 * 5 * 512
 # 512 x 512 = 16 * 16 * 512
-length_of_flattened_data = 4 * 4 * 512
+length_of_flattened_data = 5 * 5 * 512
 
 # TODO-JYW: Add the CLI options referenced below
 # Default training parameters, overriden with CLI options:
@@ -65,7 +67,7 @@ base_training_directory = 'D:\\development\\screenshots'
 #    # generated above.
 #    input = Dense(256, activation='relu', input_dim = length_of_flattened_data)
 #    x = Dropout(0.5)(input)
-#    output = Dense(1, activation='sigmoid', name='final_ouput_layer')(x)
+#    output = Dense(1, activation='sigmoid', name='final_output_layer')(x)
 #    return input, output
 
 # 
@@ -90,7 +92,7 @@ def create_network(base_network, class_network):
     x = layers.Flatten()(x)
     x = layers.Dense(256, activation='relu', input_dim = length_of_flattened_data)(x)
     x = layers.Dropout(0.5)(x)
-    x = layers.Dense(1, activation='sigmoid', name='final_ouput_layer')(x)
+    x = layers.Dense(1, activation='sigmoid', name='final_output_layer')(x)
 
     # Compile the modified base network with the added dense layer.
     return_model = Model(inputs=base_network.input, outputs=x)
@@ -178,7 +180,7 @@ def test_network(network, directory, sample_count):
 
 def extract_features(network, directory, sample_count):
     # TODO-JYW: Represent the following shape in the training parameters section
-    features = np.zeros(shape=(sample_count, 4, 4, 512))
+    features = np.zeros(shape=(sample_count, 5, 5, 512))
     labels = np.zeros(shape=(sample_count))
     batch_size = 10
 
@@ -325,7 +327,7 @@ def main():
     model = models.Sequential()
     model.add(layers.Dense(256, activation='relu', input_dim = length_of_flattened_data))
     model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(1, activation='sigmoid', name='final_ouput_layer'))
+    model.add(layers.Dense(1, activation='sigmoid', name='final_output_layer'))
     model.compile(optimizer=optimizers.RMSprop(lr=2e-5),
               loss='binary_crossentropy',
               metrics=['acc'])
@@ -349,8 +351,10 @@ def main():
               loss='binary_crossentropy',
               metrics=['acc'])
 
+    # Display the names in the joined network:
+    joined_network.summary()
+
     # Save the last network processed by Keras to a protobuf file for later deployment.
-    # TODO-JYW: Continue testing from here.
     freeze.save_to_pb(K.get_session(), model, save_network_file_path)
 
 # TODO-JYW: TESTING-TESTING
