@@ -60,7 +60,8 @@ save_class_file_path = "fire_class.h5"
 save_network_file_path = "fire_network"
 tensorboard_log_directory = "tensorboard"
 early_stopping_improvement_epochs = 10
-base_training_directory = 'D:\\development\\screenshots'
+#base_training_directory = 'D:\\development\\screenshots'
+base_training_directory = '/tf/notebooks/screenshots'
 
 #def create_class_layers():
 #    # Generate the dense network that will be used to classify the feature vectors 
@@ -174,7 +175,7 @@ def test_network(network, directory, sample_count):
         if i * batch_size >= sample_count:
             break
         else:
-            print(f"Test data count:{i * batch_size}, directory:{directory}")
+            print("Test data count:" + str(i * batch_size) + ", directory:" + directory)
 
     return predicted_label_names, predicted_label_percent, actual_label_names, file_names        
 
@@ -207,31 +208,32 @@ def extract_features(network, directory, sample_count):
         if i * batch_size >= sample_count:
             break
         else:
-            print(f"Feature count:{i * batch_size}, directory:{directory}")
+            print("Feature count:" + str(i * batch_size) + ", directory:" + directory)
 
     return features, labels
 
 def display_training_result(training_history):
-    acc = training_history.history['acc']
-    val_acc = training_history.history['val_acc']
-    loss = training_history.history['loss']
-    val_loss = training_history.history['val_loss']
+    pass
+#    acc = training_history.history['acc']
+#    val_acc = training_history.history['val_acc']
+#    loss = training_history.history['loss']
+#    val_loss = training_history.history['val_loss']
 
-    epochs = range(len(acc))
+#    epochs = range(len(acc))
 
-    plt.plot(epochs, acc, 'bo', label='Training acc')
-    plt.plot(epochs, val_acc, 'b', label='Validation acc')
-    plt.title('Training and validation accuracy')
-    plt.legend()
+#    plt.plot(epochs, acc, 'bo', label='Training acc')
+#    plt.plot(epochs, val_acc, 'b', label='Validation acc')
+#    plt.title('Training and validation accuracy')
+#    plt.legend()
 
-    plt.figure()
+#    plt.figure()
 
-    plt.plot(epochs, loss, 'bo', label='Training loss')
-    plt.plot(epochs, val_loss, 'b', label='Validation loss')
-    plt.title('Training and validation loss')
-    plt.legend()
+#    plt.plot(epochs, loss, 'bo', label='Training loss')
+#    plt.plot(epochs, val_loss, 'b', label='Validation loss')
+#    plt.title('Training and validation loss')
+#    plt.legend()
 
-    plt.show()  
+#    plt.show()  
 
 def print_help():
     pass
@@ -268,13 +270,13 @@ def display_image_predictions(predictions, membership, label_names, file_names):
                 break
 
         results_file_name = "test_results_figure_{}.jpg".format(page_num + 1)
-        print(f"Saving test results figure #{page_num + 1}, file name {results_file_name}")
+        print("Saving test results figure #" + str(page_num + 1) + ", file name " + results_file_name)
         plt.savefig(results_file_name, format="jpg")
 
         # Save the pyplot image filenames.
         return_image_files.append(results_file_name)
 
-    print(f"Error percent: {error_count / len(file_names)}")    
+    print("Error percent: " + str(error_count / len(file_names)))    
     return return_image_files
 
 def move_files(source, destintation, num_files):
@@ -305,7 +307,7 @@ def main():
     if (os.listdir(validation_dir + '/smoke') == []):
         move_files(train_dir + '/smoke', validation_dir + '/smoke', num_validation_images)
         move_files(train_dir + '/nothing', validation_dir + '/nothing', num_validation_images)
-        print("Moved {num_validation_images} images to {validation_dir}")
+        print("Moved " + str(num_validation_images) + " images to " + validation_dir)
 
     # Load the pretrained network, except the top (last) layer used for classification.
     network = VGG16(weights='imagenet',
@@ -344,6 +346,9 @@ def main():
                                    callbacks.create_model_checkpoint(save_class_file_path),
                                    callbacks.create_tensorboard(tensorboard_log_directory)])
     display_training_result(history)
+
+    # Indicate that this Keras network will only be used for inference.
+    K.set_learning_phase(False)
 
     # Add the model trained above to the base network so that it can be saved as a single network.
     joined_network = create_network(network, model)
