@@ -29,6 +29,17 @@ def freeze_session(session, keep_var_names=None, output_names=None, clear_device
             session, input_graph_def, output_names, freeze_var_names)
         return frozen_graph
 
+def save_to_h5(model, save_network_file, is_quantize):
+#    saved_model_dir = './h5'
+#    saved_model_full_file_name = saved_model_dir + '/' + file_name + '.h5'
+    model.save(save_network_file + '.h5')
+
+    if (is_quantize):
+        converter = tf.lite.TFLiteConverter.from_keras_model(save_network_file)
+        converter.optimizations = [tf.lite.Optimize.OPTIMIZE_FOR_SIZE]
+        tflite_quant_model = converter.convert()
+        tflite_quant_model.save(save_network_file + '.tflite')
+
 def save_to_pb(session, model, file_name):
     frozen_graph = freeze_session(session, output_names=[out.op.name for out in model.outputs])
 #    tf.train.write_graph(frozen_graph, './', file_name + '.pbtxt', as_text=True)

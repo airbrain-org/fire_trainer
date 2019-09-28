@@ -1,0 +1,1 @@
+edgetpu_compiler fire_network.tflite
