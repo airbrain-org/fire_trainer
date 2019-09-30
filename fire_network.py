@@ -65,7 +65,8 @@ length_of_flattened_data = 5 * 5 * 1024
 # TODO-JYW: Add the CLI options referenced below
 # Default training parameters, overriden with CLI options:
 # save_class_file_path = "./h5/fire_network.h5"
-save_network_directory = "./h5/"
+checkpoint_directory = "./checkpoint/"
+tflite_directory = "./tflite/"
 save_network_file = "fire_network.h5"
 tensorboard_log_directory = "tensorboard"
 early_stopping_improvement_epochs = 10
@@ -355,7 +356,7 @@ def main():
     # Setup of the callback executed at the end of every epoch, to check the performance on the test data.                        
                         callbacks=[callbacks.create_test_data_checkpoint(model, test_features, test_labels),
                                    callbacks.create_early_stopping(early_stopping_improvement_epochs),
-                                   callbacks.create_model_checkpoint(save_network_directory + save_network_file),
+                                   callbacks.create_model_checkpoint(checkpoint_directory + save_network_file),
                                    callbacks.create_tensorboard(tensorboard_log_directory)])
     display_training_result(history)
 
@@ -372,7 +373,7 @@ def main():
     joined_network.summary()
 
     # Save the last network processed by Keras to a protobuf file for later deployment.
-    freeze.save_to_h5(model, save_network_directory, True)
+    freeze.save_to_h5(joined_network, tflite_directory + save_network_file, True)
 
 # TODO-JYW: TESTING-TESTING
     # Display results generated from the test data.

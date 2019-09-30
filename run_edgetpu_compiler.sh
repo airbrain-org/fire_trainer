@@ -1,1 +1,1 @@
-edgetpu_compiler fire_network.tflite
+edgetpu_compiler ./tflite/fire_network.tflite
