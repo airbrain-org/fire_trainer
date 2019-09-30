@@ -33,9 +33,11 @@ def save_to_h5(model, directory_name, file_name, do_quantize):
 #    saved_model_dir = './h5'
 #    saved_model_full_file_name = saved_model_dir + '/' + file_name + '.h5'
 
-    # TODO-JYW: LEFT-OFF: Make the block of code functional.  The data generator
-    # produced during training can be used for the representative_dataset. Also,
-    # install the same version of tensor flow used in the docker container (1.13.2)
+    # TODO-JYW: LEFT-OFF: Make the block of code functional, from:  
+    # https://www.tensorflow.org/lite/performance/post_training_quantization
+    # The data generator produced during training can be used for the 
+    # representative_dataset. Also, install the same version of tensor flow 
+    # used in the docker container (1.13.2)
 
     # Save the unquantized model for later reference by the converter.
     model.save(directory_name + file_name)
