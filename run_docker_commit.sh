@@ -1,3 +1,3 @@
-CONTAINER_ID=63ede28ae884
+CONTAINER_ID=c8ad1e9b89ab
 
-docker commit ${CONTAINER_ID} jywilson/tensorflow:nightly-gpu-py3-jupyter-keras  
+docker commit ${CONTAINER_ID} jywilson/tensorflow-airbrain:latest 

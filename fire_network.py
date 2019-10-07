@@ -63,6 +63,8 @@ y_image_pixels = 160
 length_of_flattened_data = 5 * 5 * 1024
 
 # TODO-JYW: Add the CLI options referenced below
+# TODO-JYW: Add code to check for the existence of directories mentioned below.
+
 # Default training parameters, overriden with CLI options:
 # save_class_file_path = "./h5/fire_network.h5"
 checkpoint_directory = "./checkpoint/"
@@ -71,7 +73,8 @@ save_network_file = "fire_network.h5"
 tensorboard_log_directory = "tensorboard"
 early_stopping_improvement_epochs = 10
 #base_training_directory = 'D:\\development\\screenshots'
-base_training_directory = '/tf/notebooks/screenshots'
+#base_training_directory = '/tf/notebooks/screenshots'
+base_training_directory = '../screenshots'
 
 #def create_class_layers():
 #    # Generate the dense network that will be used to classify the feature vectors 
@@ -220,7 +223,7 @@ def extract_features(network, directory, sample_count):
         else:
             print("Feature count:" + str(i * batch_size) + ", directory:" + directory)
 
-    return features, labels
+    return features, labels, generator
 
 def display_training_result(training_history):
     pass
@@ -328,9 +331,9 @@ def main():
             input_shape=(x_image_pixels, y_image_pixels, 3))
 
     # Generate feature vectors for each of the images using the pretrained network.
-    train_features, train_labels = extract_features(network, train_dir, num_training_images)
-    validation_features, validation_labels = extract_features(network, validation_dir, num_validation_images)
-    test_features, test_labels = extract_features(network, test_dir, num_test_images)
+    validation_features, validation_labels, data_generator = extract_features(network, validation_dir, num_validation_images)
+    test_features, test_labels, data_generator = extract_features(network, test_dir, num_test_images)
+    train_features, train_labels, data_generator = extract_features(network, train_dir, num_training_images)
 
     # Flatten the feature vectors to be used in the dense network which follows.
     train_features = np.reshape(train_features, (num_training_images, length_of_flattened_data))
@@ -373,7 +376,7 @@ def main():
     joined_network.summary()
 
     # Save the last network processed by Keras to a protobuf file for later deployment.
-    freeze.save_to_h5(joined_network, tflite_directory + save_network_file, True)
+    freeze.save_to_h5(joined_network, tflite_directory, save_network_file, data_generator, True)
 
 # TODO-JYW: TESTING-TESTING
     # Display results generated from the test data.

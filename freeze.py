@@ -29,7 +29,7 @@ def freeze_session(session, keep_var_names=None, output_names=None, clear_device
             session, input_graph_def, output_names, freeze_var_names)
         return frozen_graph
 
-def save_to_h5(model, directory_name, file_name, do_quantize):
+def save_to_h5(model, directory_name, file_name, dataset, do_quantize):
 #    saved_model_dir = './h5'
 #    saved_model_full_file_name = saved_model_dir + '/' + file_name + '.h5'
 
@@ -38,25 +38,38 @@ def save_to_h5(model, directory_name, file_name, do_quantize):
     # The data generator produced during training can be used for the 
     # representative_dataset. Also, install the same version of tensor flow 
     # used in the docker container (1.13.2)
+    #
+    # TODO-JYW: LEFT-OFF: tflite from TF 2.0 is not working with the keras model.
+    # Continue working with the TF 1.15.rc2.  
+    #
+    # Make the implement the following method:
 
-    # Save the unquantized model for later reference by the converter.
-    model.save(directory_name + file_name)
+    # def representative_dataset_gen():
+    # for _ in range(num_calibration_steps):
+    #    # Get sample input data as a numpy array in a method of your choosing.
+    #    yield [input]
+
+    # Study python generator documentation.
+
+        # Save the unquantized model for later reference by the converter.
+        model.save(directory_name + file_name)
 
     if (do_quantize):
-        def representative_dataset_gen():
-          for _ in range(num_calibration_steps):
-            # Get sample input data as a numpy array in a method of your choosing.
-            yield [input]
+#        def representative_dataset_gen():
+#          for _ in range(num_calibration_steps):
+#            # Get sample input data as a numpy array in a method of your choosing.
+#            yield [input]
 
-        converter = tf.lite.TFLiteConverter.from_saved_model(directory_name + file_name)
+#        converter = tf.lite.TFLiteConverter.from_keras_model(directory_name + file_name)
+        converter = tf.lite.TFLiteConverter.from_keras_model_file(directory_name + file_name)
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
-        converter.representative_dataset = representative_dataset_gen
+        converter.representative_dataset = dataset
         converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
         converter.inference_input_type = tf.uint8
         converter.inference_output_type = tf.uint8
 
         converter.convert().save(directory_name + "quant_" + file_name)
-   
+    
 
 #    if (is_quantize):
 #        converter = tf.lite.TFLiteConverter.from_keras_model(save_network_file)
