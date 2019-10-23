@@ -52,9 +52,17 @@ def save_to_h5(model, directory_name, file_name, dataset, do_quantize):
     # Study python generator documentation.
 
         # Save the unquantized model for later reference by the converter.
-        model.save(directory_name + file_name)
+        #model.save(directory_name + file_name)
 
     if (do_quantize):
+        image_batch, _ = next(dataset)
+        tf_dataset = tf.data.Dataset.from_tensor_slices((image_batch)).batch(1)
+        def representative_dataset_gen():
+            for input_value in tf_dataset:
+                yield [input_value]
+#            for input_value in tf_dataset.take(100):
+#                yield [input_value]
+
 #        def representative_dataset_gen():
 #          for _ in range(num_calibration_steps):
 #            # Get sample input data as a numpy array in a method of your choosing.
@@ -63,12 +71,13 @@ def save_to_h5(model, directory_name, file_name, dataset, do_quantize):
 #        converter = tf.lite.TFLiteConverter.from_keras_model(directory_name + file_name)
         converter = tf.lite.TFLiteConverter.from_keras_model_file(directory_name + file_name)
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
-        converter.representative_dataset = dataset
+        converter.representative_dataset = representative_dataset_gen
         converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
         converter.inference_input_type = tf.uint8
         converter.inference_output_type = tf.uint8
 
-        converter.convert().save(directory_name + "quant_" + file_name)
+        model = converter.convert()
+        model.save(directory_name + "quant_" + file_name)
     
 
 #    if (is_quantize):
