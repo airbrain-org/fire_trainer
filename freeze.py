@@ -59,6 +59,7 @@ def save_to_h5(model, directory_name, file_name, dataset, do_quantize):
 #        @tf.function
         def representative_dataset_gen():
            for input_value in image_batch:
+               # TODO-JYW: LEFT-OFF: Convert the shape of input_value to 1,160,160,3 from 160,160,3.
                print(input_value.shape)
                yield [input_value]
 
@@ -75,7 +76,7 @@ def save_to_h5(model, directory_name, file_name, dataset, do_quantize):
 #            yield [input]
 
 #        converter = tf.lite.TFLiteConverter.from_keras_model(directory_name + file_name)
-        converter = tf.lite.TFLiteConverter.from_keras_model_file(directory_name + file_name, input_shapes={"input_1":[160,160,3]})
+        converter = tf.lite.TFLiteConverter.from_keras_model_file(directory_name + file_name, input_shapes={"input_1":[1,160,160,3]})
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
         converter.representative_dataset = representative_dataset_gen
 #        input_value = next(image_batch)
