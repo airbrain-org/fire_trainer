@@ -1,1 +1,6 @@
 .vscode/
+tensorboard/
+checkpoint/
+tflite/
+*.old
+*.pyc

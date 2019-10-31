@@ -375,9 +375,6 @@ def main():
     # Display the names in the joined network:
     joined_network.summary()
 
-    # Save the last network processed by Keras to a protobuf file for later deployment.
-    freeze.save_to_h5(joined_network, tflite_directory, save_network_file, data_generator, True)
-
 # TODO-JYW: TESTING-TESTING
     # Display results generated from the test data.
 #    mse, mae = model.evaluate(test_features, test_labels)
@@ -392,6 +389,9 @@ def main():
     # TODO-JYW: Create a join_network function.
     # TODO-JYW: LEFT-OFF: Modify test_network to use a single network.  
     # TODO-JYW: Modify the code to save the network after it is joined with join_network.
+
+    # Save the last network processed by Keras to a file for later deployment.
+    freeze.save_to_h5(joined_network, tflite_directory, save_network_file, data_generator, True)
 
     # Now display the predictions and the associated images in the test data.
     display_image_predictions(predicted_label_names, predicted_label_percent, actual_label_names, file_names)

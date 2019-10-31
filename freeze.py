@@ -58,10 +58,11 @@ def save_to_h5(model, directory_name, file_name, dataset, do_quantize):
         image_batch, _ = next(dataset)
 #        @tf.function
         def representative_dataset_gen():
-           for input_value in image_batch:
-               # TODO-JYW: LEFT-OFF: Convert the shape of input_value to 1,160,160,3 from 160,160,3.
-               print(input_value.shape)
-               yield [input_value]
+            for input_value in image_batch:
+                print(input_value.shape)
+                # Convert the shape of input_value to 1,160,160,3 from 160,160,3.               
+                yield [input_value.reshape(1,input_value.shape[0],input_value.shape[1],
+                    input_value.shape[2])]
 
 #            tf_dataset = tf.data.Dataset.from_tensor_slices((image_batch)).batch(1)
 #            for input_value in tf_dataset:
@@ -75,8 +76,8 @@ def save_to_h5(model, directory_name, file_name, dataset, do_quantize):
 #            # Get sample input data as a numpy array in a method of your choosing.
 #            yield [input]
 
-#        converter = tf.lite.TFLiteConverter.from_keras_model(directory_name + file_name)
-        converter = tf.lite.TFLiteConverter.from_keras_model_file(directory_name + file_name, input_shapes={"input_1":[1,160,160,3]})
+        converter = tf.lite.TFLiteConverter.from_keras_model_file(directory_name + file_name)
+#        converter = tf.lite.TFLiteConverter.from_keras_model_file(directory_name + file_name, input_shapes={"input_1":[1,160,160,3]})
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
         converter.representative_dataset = representative_dataset_gen
 #        input_value = next(image_batch)
@@ -86,9 +87,10 @@ def save_to_h5(model, directory_name, file_name, dataset, do_quantize):
         converter.inference_input_type = tf.uint8
         converter.inference_output_type = tf.uint8
 
-        model = converter.convert()
-        model.save(directory_name + "quant_" + file_name)
-    
+        tflite_model = converter.convert()
+        full_file_name = directory_name + "quant_" + file_name + ".tflite"
+        open(full_file_name, "wb").write(tflite_model)
+        print("tflite model file saved to: ", full_file_name)
 
 #    if (is_quantize):
 #        converter = tf.lite.TFLiteConverter.from_keras_model(save_network_file)
