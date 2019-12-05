@@ -10,8 +10,11 @@
 # -v $(realpath ~/develop):/tf/notebooks \
 # tensorflow/tensorflow
 
-docker run --net=host -it --rm \
- -v $(realpath ~/develop):/home/jywilson/develop jywilson/tensorflow-airbrain:latest
+# -u $(id -u):$(id -g) \
+
+docker run --net=host -it --rm --privileged \
+ -v $(realpath ~/develop):/home/jywilson/develop -v /dev/bus/usb:/dev/bus/usb \
+ jywilson/tensorflow-airbrain:latest
 
 
 
