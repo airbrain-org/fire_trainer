@@ -1,0 +1,2 @@
+0 Smoke
+1 Nothing

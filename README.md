@@ -37,14 +37,17 @@ Installing the interpreter:
 https://www.tensorflow.org/lite/guide/python
 
 Running the quantized model produced at the end of the training process is described 
-here: https://coral.ai/docs/edgetpu/inference/
-
-
+here: 
+- https://coral.ai/docs/edgetpu/inference/
+- https://github.com/google-coral/tflite/tree/master/python/examples/classification
 
 # Notes
 - The number of training and validation files must be evenly divisible by 10.
 - Development of the training source code was performed on a Windows PC with VSCode,
 used for execution and setting break points.
+
+# LEFT-OFF:
+
 
 # TODO:
 - Evaluate the performance of the test data after each epoch, and make this the primary
