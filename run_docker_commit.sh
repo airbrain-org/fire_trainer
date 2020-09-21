@@ -1,3 +1,3 @@
-CONTAINER_ID=7e45f27ef202
+CONTAINER_ID=f00a34f6f7ce
 
 docker commit ${CONTAINER_ID} jywilson/tensorflow-airbrain:latest 

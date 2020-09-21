@@ -1,0 +1,37 @@
+Images not seen by the network during training (testing only): syp-s-mobo-c
+
+
+Found 204 images belonging to 2 classes.
+Test data count:10, directory:../screenshots/test
+Test data count:20, directory:../screenshots/test
+Test data count:30, directory:../screenshots/test
+Test data count:40, directory:../screenshots/test
+Test data count:50, directory:../screenshots/test
+Test data count:60, directory:../screenshots/test
+Test data count:70, directory:../screenshots/test
+Test data count:80, directory:../screenshots/test
+Test data count:90, directory:../screenshots/test
+Test data count:100, directory:../screenshots/test
+Test data count:110, directory:../screenshots/test
+Test data count:120, directory:../screenshots/test
+Test data count:130, directory:../screenshots/test
+Test data count:140, directory:../screenshots/test
+Test data count:150, directory:../screenshots/test
+Test data count:160, directory:../screenshots/test
+Test data count:170, directory:../screenshots/test
+Test data count:180, directory:../screenshots/test
+Test data count:190, directory:../screenshots/test
+Saving test results figure #1, file name test_results_figure_1.jpg
+Saving test results figure #2, file name test_results_figure_2.jpg
+Saving test results figure #3, file name test_results_figure_3.jpg
+Saving test results figure #4, file name test_results_figure_4.jpg
+Saving test results figure #5, file name test_results_figure_5.jpg
+Saving test results figure #6, file name test_results_figure_6.jpg
+Saving test results figure #7, file name test_results_figure_7.jpg
+Saving test results figure #8, file name test_results_figure_8.jpg
+Saving test results figure #9, file name test_results_figure_9.jpg
+Saving test results figure #10, file name test_results_figure_10.jpg
+Saving test results figure #11, file name test_results_figure_11.jpg
+Saving test results figure #12, file name test_results_figure_12.jpg
+Error percent: 0.47
+

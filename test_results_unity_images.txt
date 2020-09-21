@@ -1,0 +1,12 @@
+Used images from wc-n-mobo-c in the test dataset. Only images generated from
+Unity were included in the training dataset.
+
+Found 167 images belonging to 2 classes.
+Test data count:10, directory:../screenshots/test
+Test data count:20, directory:../screenshots/test
+Test data count:30, directory:../screenshots/test
+Saving test results figure #1, file name test_results_figure_1.jpg
+Saving test results figure #2, file name test_results_figure_2.jpg
+Saving test results figure #3, file name test_results_figure_3.jpg
+Error percent: 0.35
+

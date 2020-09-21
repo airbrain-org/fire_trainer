@@ -42,25 +42,37 @@ from keras import backend as K
 
 # Training parameters:
 detection_threshold = .90
-num_training_images = 500
-num_validation_images = 50
+# num_training_images = 500
+num_training_images = 20
+
+# num_validation_images = 50
+num_validation_images = 30
+
+# num_test_images = 40
 num_test_images = 40
+
 model_fit_batch_size = 100
-num_epochs = 80
+
+# TODO-JYW: Another command line option needed here, as in all of the above.
+# num_epochs = 80
+num_epochs = 1000
+
 x_image_pixels = 160
 y_image_pixels = 160
+
+# TODO-JYW: Add command-line option to switch networks.
 
 # For VGG16:
 # Note: Must also change the size of the features vector in extract_features()
 # 150 x 150 = 4 * 4 * 512
 # 160 x 160 = 5 * 5 * 512
 # 512 x 512 = 16 * 16 * 512
-# length_of_flattened_data = 5 * 5 * 512
+length_of_flattened_data = 5 * 5 * 512
 
 # For MobileNet:
 # Note: Must also change the size of the features vector in extract_features()
 # 160 x 160 = 5 * 5 * 1024
-length_of_flattened_data = 5 * 5 * 1024
+# length_of_flattened_data = 5 * 5 * 1024
 
 # TODO-JYW: Add the CLI options referenced below
 # TODO-JYW: Add code to check for the existence of directories mentioned below.
@@ -70,7 +82,11 @@ checkpoint_directory = "./checkpoint/"
 tflite_directory = "./tflite/"
 save_network_file = "fire_network.h5"
 tensorboard_log_directory = "tensorboard"
-early_stopping_improvement_epochs = 10
+
+# TODO-JYW: 
+# early_stopping_improvement_epochs = 10
+early_stopping_improvement_epochs = 100
+
 base_training_directory = '../screenshots'
 
 def create_network(base_network, class_network):
@@ -167,7 +183,10 @@ def test_network(network, directory, sample_count):
 
 def extract_features(network, directory, sample_count):
     # TODO-JYW: Represent the following shape in the training parameters section
-    features = np.zeros(shape=(sample_count, 5, 5, 1024))
+# TODO-JYW: Used for MobileNet:    
+#    features = np.zeros(shape=(sample_count, 5, 5, 1024))
+# TODO-JYW: Used for VGG16
+    features = np.zeros(shape=(sample_count, 5, 5, 512))
     labels = np.zeros(shape=(sample_count))
     batch_size = 10
 
@@ -227,7 +246,9 @@ def print_help():
 def display_image_predictions(predictions, membership, label_names, file_names):
     columns = 4
     rows = 4
-    pages = 4
+# TODO-JYW: Add pages as a command-line option.    
+#    pages = 4
+    pages = 12
 
     is_more_images = len(file_names) > 0
     error_count = 0
@@ -296,12 +317,12 @@ def main():
         print("Moved " + str(num_validation_images) + " images to " + validation_dir)
 
     # Load the pretrained network, except the top (last) layer used for classification.
-    #network = VGG16(weights='imagenet',
-    #        include_top=False,
-    #        input_shape=(x_image_pixels, y_image_pixels, 3))
-    network = MobileNet(weights='imagenet',
+    network = VGG16(weights='imagenet',
             include_top=False,
             input_shape=(x_image_pixels, y_image_pixels, 3))
+    #network = MobileNet(weights='imagenet',
+    #        include_top=False,
+    #        input_shape=(x_image_pixels, y_image_pixels, 3))
 
     # Generate feature vectors for each of the images using the pretrained network.
     validation_features, validation_labels, data_generator = extract_features(network, validation_dir, num_validation_images)
@@ -341,19 +362,22 @@ def main():
 
     # Add the model trained above to the base network so that it can be saved as a single network.
     joined_network = create_network(network, model)
-    joined_network.compile(optimizer=optimizers.RMSprop(lr=2e-5),
-              loss='binary_crossentropy',
-              metrics=['acc'])
+#    joined_network.compile(optimizer=optimizers.RMSprop(lr=2e-5),
+#              loss='binary_crossentropy',
+#              metrics=['acc'])
 
     # Display the names in the joined network:
     joined_network.summary()
 
     # Apply the pretrained base network and the densely connected classifier to
     # the images in the test directory.
-    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(joined_network, test_dir, 40)
+    # TODO-JYW: Make the number of images displayed a parameter.
+#    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(joined_network, test_dir, 40)
+    predicted_label_names, predicted_label_percent, actual_label_names, file_names = test_network(joined_network, test_dir, 200)
 
     # Save the last network processed by Keras to a file for later deployment.
-    freeze.save_to_tflite(joined_network, tflite_directory, save_network_file, data_generator, True)
+    # TODO-JYW: Provide a command line option to save to a non-quantized format. Use save_to_pb?    
+    # freeze.save_to_tflite(joined_network, tflite_directory, save_network_file, data_generator, True)
 
     # Now display the predictions and the associated images in the test data.
     display_image_predictions(predicted_label_names, predicted_label_percent, actual_label_names, file_names)
